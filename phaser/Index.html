@@ -93,23 +93,21 @@
 
             baddies = game.add.group();
             baddies.enableBody = true;
+            baddies.physicsBodyType = Phaser.Physics.ARCADE;
 
-            for (var i = 0; i < 10; i++) {
-                //  Create a star inside of the 'stars' group
-                var baddie = baddies.create(i * 40, 0, 'baddie');
+            for (var i = 0; i < 4; i++) {
+                var baddie = baddies.create(i * 200, 0, 'baddie');
 
-                //  Let gravity do its thing
-                baddie.body.gravity.y = 6;
+                baddie.body.gravity.y = 100;
 
-                //  This just gives each star a slightly random bounce value
+                baddie.body.bounce.x = 1;
                 baddie.body.bounce.y = 0.7 + Math.random() * 0.2;
 
                 baddie.animations.add('left', [0, 1], 10, true);
                 baddie.animations.add('right', [2, 3], 10, true);
-
-                baddie.body.velocity.x = 10;
+                baddie.frame = 1;
                 baddie.body.collideWorldBounds = true;
-                baddie.animations.play('right');
+
             }
 
         }
@@ -118,7 +116,9 @@
             //  Collide the player and the stars with the platforms
             game.physics.arcade.collide(player, platforms);
             game.physics.arcade.collide(stars, platforms);
-            game.physics.arcade.collide(baddies, platforms);
+            game.physics.arcade.collide(baddies, platforms, baddieMove);
+            game.physics.arcade.collide(baddies, baddies);
+            game.physics.arcade.collide(player, baddies, killPlayerOrBaddie);
 
             //  Reset the players velocity (movement)
             player.body.velocity.x = 0;
@@ -148,6 +148,15 @@
             }
 
             game.physics.arcade.overlap(player, stars, collectStar, null, this);
+
+            baddies.forEach(function (baddie) {
+                if (baddie.animations.currentAnim.name == 'left' && baddie.body.velocity.x > 0) {
+                    baddie.animations.play('right');
+                }
+                else if (baddie.animations.currentAnim.name == 'right' && baddie.body.velocity.x < 0) {
+                    baddie.animations.play('left');
+                }
+            });
         }
 
         function collectStar(player, star) {
@@ -159,6 +168,30 @@
             score += 10;
             scoreText.text = 'Score: ' + score;
 
+        }
+
+        function baddieMove(baddie, platform) {
+            if (baddie.body.velocity.x == 0) {
+                if (baddie.body.x < 400) {
+                    baddie.body.velocity.x = -50;
+                    baddie.animations.play('left');
+                }
+                else {
+                    baddie.body.velocity.x = 50;
+                    baddie.animations.play('right');
+                }
+            }
+
+        }
+
+        function killPlayerOrBaddie(player, baddie) {
+            if (baddie.body.touching.up) {
+                baddie.kill();
+
+            }
+            else {
+                player.kill();
+            }
         }
 
     </script>
