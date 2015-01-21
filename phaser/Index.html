@@ -13,7 +13,7 @@
     <script type="text/javascript">
 
         var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-        var platforms, player, cursors, stars;
+        var platforms, player, cursors, stars, baddies;
         var score = 0;
         var scoreText;
 
@@ -22,6 +22,7 @@
             game.load.image('ground', 'assets/platform.png');
             game.load.image('star', 'assets/star.png');
             game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+            game.load.spritesheet('baddie', 'assets/baddie.png', 32, 32);
         }
 
         function create() {
@@ -89,12 +90,35 @@
             }
 
             scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+
+            baddies = game.add.group();
+            baddies.enableBody = true;
+
+            for (var i = 0; i < 10; i++) {
+                //  Create a star inside of the 'stars' group
+                var baddie = baddies.create(i * 40, 0, 'baddie');
+
+                //  Let gravity do its thing
+                baddie.body.gravity.y = 6;
+
+                //  This just gives each star a slightly random bounce value
+                baddie.body.bounce.y = 0.7 + Math.random() * 0.2;
+
+                baddie.animations.add('left', [0, 1], 10, true);
+                baddie.animations.add('right', [2, 3], 10, true);
+
+                baddie.body.velocity.x = 10;
+                baddie.body.collideWorldBounds = true;
+                baddie.animations.play('right');
+            }
+
         }
 
         function update() {
             //  Collide the player and the stars with the platforms
             game.physics.arcade.collide(player, platforms);
             game.physics.arcade.collide(stars, platforms);
+            game.physics.arcade.collide(baddies, platforms);
 
             //  Reset the players velocity (movement)
             player.body.velocity.x = 0;
